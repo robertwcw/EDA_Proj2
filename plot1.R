@@ -17,6 +17,7 @@ source(getRflib("myplclust.R"), local = TRUE)
 # Libraries
 # library(maps)
 library(dplyr)
+
 # Preparing data for EDA
 # data(county.fips)
 # data(state.fips)
@@ -46,7 +47,6 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
-
 emissionPM25 <- filePM25 %>% 
                 group_by(Pollutant, type, year) %>% 
                 summarise(Emission.mean = mean(Emissions)) 
@@ -76,9 +76,9 @@ with(subset(emissionPM25, type == unique(type)[3]),
 with(subset(emissionPM25, type == unique(type)[4]), 
      lines(year, Emission.mean, lwd = 2, lty = 3, col = pal[4])
      )
-title(main = "Pollutant PM2.5 Emissions for All States (1999 - 2008)",
-      xlab = "Year",
-      ylab = "PM2.5 Mass (tons)"
+title(main = "Pollutant PM2.5 Emissions of All States (1999 ~ 2008)", 
+      xlab = "Year", 
+      ylab = "PM2.5 Mass (tons)" 
       )
 dev.off()
 
