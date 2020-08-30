@@ -48,37 +48,40 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     rm(fileout1, fileout2) 
 }
 emissionPM25 <- filePM25 %>% 
-                group_by(Pollutant, type, year) %>% 
-                summarise(Emission.mean = mean(Emissions)) 
+                # group_by(Pollutant, type, year) %>%
+                group_by(Pollutant, year) %>%
+                summarise(Emission.total = sum(Emissions)) 
 
 # Preparing color palette based on RGB color space
 pal <- c(rgb(0,0,1), rgb(0,1,0), rgb(1,0,0), rgb(1,0,1))
 
 # Plotting graph
 png(filename = "plot1.png", width = 600, height = 600, units = "px")
-par(cex = 1.0)
+par(ann = FALSE, cex = 1, cex.sub = 1.1, ylog = TRUE)
 with(emissionPM25, 
-     plot(year, Emission.mean, 
-          pch = 19, col = pal[as.factor(type)], main = "", xlab = "", ylab = "")
+     plot(year, log10(Emission.total), type = "o", 
+          # pch = 19, col = pal[as.factor(type)], log = "y"
+          pch = 19, col = pal[3], log = "y"
+          )
      )
-legend("topright", pch = 19, col = pal[as.factor(unique(emissionPM25$type))], 
-       legend = as.factor(unique(emissionPM25$type))
-      )
-with(subset(emissionPM25, type == unique(type)[1]), 
-     lines(year, Emission.mean, lwd = 2, lty = 3, col = pal[1])
-     )
-with(subset(emissionPM25, type == unique(type)[2]), 
-     lines(year, Emission.mean, lwd = 2, lty = 3, col = pal[2])
-     )
-with(subset(emissionPM25, type == unique(type)[3]), 
-     lines(year, Emission.mean, lwd = 2, lty = 3, col = pal[3])
-     )
-with(subset(emissionPM25, type == unique(type)[4]), 
-     lines(year, Emission.mean, lwd = 2, lty = 3, col = pal[4])
-     )
-title(main = "Pollutant PM2.5 Emissions of All States (1999 ~ 2008)", 
+# legend("topright", pch = 19, col = pal[as.factor(unique(emissionPM25$type))], 
+#        legend = as.factor(unique(emissionPM25$type))
+#       )
+# with(subset(emissionPM25, type == unique(type)[1]), 
+#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[1])
+#     )
+# with(subset(emissionPM25, type == unique(type)[2]), 
+#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[2])
+#     )
+# with(subset(emissionPM25, type == unique(type)[3]), 
+#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[3])
+#     )
+# with(subset(emissionPM25, type == unique(type)[4]), 
+#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[4])
+#     )
+title(main = "Total PM2.5 Emissions of All States (1999 ~ 2008)", 
       xlab = "Year", 
-      ylab = "PM2.5 Mass (tons)" 
+      ylab = "Mass of PM2.5 Emissions [ tonnage @ log10 ]" 
       )
 dev.off()
 
