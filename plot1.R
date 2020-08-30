@@ -80,7 +80,8 @@ with(emissionPM25,
 #      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[4])
 #     )
 title(main = "Total PM2.5 Emissions of All States (1999 ~ 2008)", 
-      xlab = "Year", 
+      sub = "National Emissions Inventory Data (publish every 3 years)", 
+      xlab = "YEAR", 
       ylab = "Mass of PM2.5 Emissions [ tonnage @ log10 ]" 
       )
 dev.off()
