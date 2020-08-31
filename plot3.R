@@ -62,7 +62,7 @@ gr <- qplot(x = year, y = log10(Emission.total), data = baltimorePM25,
             )
 gr <- gr + labs(title = "PM2.5 Emissions of Baltimore City, Maryland (1999 ~ 2008)", 
                 subtitle = "By Type of pollutant source", 
-                caption = "National Emissions Inventory Data (publish every 3-year)" 
+                caption = "Data: National Emissions Inventory (publish every 3-year)" 
                 )
 print(gr)
 dev.off()
