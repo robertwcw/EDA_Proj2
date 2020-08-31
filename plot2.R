@@ -61,7 +61,7 @@ par(ann = FALSE, cex = 1, cex.sub = 1.1, ylog = TRUE)
 with(baltimorePM25, 
      plot(year, log10(Emission.total), type = "o", 
           # pch = 19, col = pal[as.factor(type)]), log = "y" 
-          pch = 19, col = pal[3], log = "y"
+          pch = 19, col = pal[3]
          ) 
     ) 
 # legend("topright", pch = 19, col = pal[as.factor(unique(baltimorePM25$type))], 
@@ -82,7 +82,7 @@ with(baltimorePM25,
 title(main = "Total PM2.5 Emissions of Baltimore City, Maryland (1999 ~ 2008)", 
       sub = "National Emissions Inventory Data (publish every 3 years)", 
       xlab = "YEAR", 
-      ylab = "Mass of PM2.5 Emissions [ tonnage @ log10 ]" 
+      ylab = "Mass of PM2.5 Emissions [ @log10(tonnage) ]" 
     )
 dev.off()
 
