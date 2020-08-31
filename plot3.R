@@ -54,13 +54,17 @@ baltimorePM25 <- filePM25 %>%
 
 # Plotting graph 
 png(filename = "plot3.png", width = 600, height = 600, units = "px") 
-qplot(x = year, y = log10(Emission.total), data = baltimorePM25,  
-      color = type, 
-      geom = c("point", "line"), 
-      main = "PM2.5 Emissions by Type of Baltimore City, Maryland (1999 ~ 2008)", 
-      xlab = "Year", 
-      ylab = "PM2.5 Emissions [ Mass @ log10(tonnage) ]" 
-      )
+gr <- qplot(x = year, y = log10(Emission.total), data = baltimorePM25,  
+            color = type, 
+            geom = c("point", "line"), 
+            xlab = "Year",
+            ylab = "PM2.5 Emissions [ Mass @ log10(tonnage) ]"
+            )
+gr <- gr + labs(title = "PM2.5 Emissions of Baltimore City, Maryland (1999 ~ 2008)", 
+                subtitle = "By Type of pollutant source", 
+                caption = "National Emissions Inventory Data (publish every 3-year)" 
+                )
+print(gr)
 dev.off()
 
 # Houese keeping
