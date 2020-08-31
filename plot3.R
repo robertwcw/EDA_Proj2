@@ -1,7 +1,7 @@
 ################################################################################
 ## Project: EDA course project 2
 ## Script: plot3.R
-## Date: 30/08/2020
+## Date: 31/08/2020
 ## Author: 
 ################################################################################
 .Rfliburl <- "https://raw.githubusercontent.com/robertwcw/Rflib/master"
@@ -76,5 +76,5 @@ if (substr(response,1,1) %in% c("Y","y"))
 {
     rm(fileSCC, filePM25, baltimorePM25)
 }
-rm(response, datadir, pal, getRflib, is.defined, myplclust, .Rfliburl)
+rm(response, datadir, pal, getRflib, is.defined, myplclust, .Rfliburl, gr)
 gc(full = TRUE)
