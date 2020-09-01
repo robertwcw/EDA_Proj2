@@ -32,7 +32,8 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
 {
     if (is.na(list.files(datadir)[1]) | is.na(list.files(datadir)[2])) 
     {
-        fileurl <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+        fileurl <- paste0("https://d396qusza40orc.cloudfront.net/",
+                          "exdata%2Fdata%2FNEI_data.zip")
         filetmp <- tempfile() 
         download.file(url = fileurl, destfile = filetmp) 
         unzip(filetmp, overwrite = TRUE, exdir = datadir) 
@@ -47,14 +48,13 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     rm(fileout1, fileout2) 
 }
 
-coalSCC <- fileSCC %>% subset(., grepl("[Cc][Oo][Aa][Ll]",Short.Name)) %>% 
+coalSCC <- fileSCC %>%  subset(., Data.Category %in% c("Point","Nonpoint")) %>% 
+                        subset(., grepl("[Cc][Oo][Aa][Ll]",Short.Name)) %>% 
                         subset(., grepl("[Cc][Oo][Mm][Bb]",Short.Name)) 
 
-coalPM25 <- filePM25 %>% 
-                filter(SCC %in% coalSCC$SCC) 
-                # group_by(Pollutant, type) %>% 
-                # summarise(Emissions.mean = mean(Emissions)) 
-
+coalPM25 <- filePM25 %>% filter(SCC %in% coalSCC$SCC) 
+                        # group_by(Pollutant, type) %>% 
+                        # summarise(Emissions.mean = mean(Emissions)) 
 coalPM25$type <- as.factor(coalPM25$type)
 
 # Plotting graph for NonPoint source PM2.5 pollutant (overall across the US)
@@ -65,7 +65,8 @@ gr0 <- qplot(jitter(year), jitter(Emissions), data = coalPM25,
             # color = type, 
             xlab = "Year", 
             ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]", 
-            main = "Total PM2.5 Emissions from Coal Combustion Sources (1999 ~ 2008)"
+            main = paste0("Total PM2.5 Emissions from ",
+                          "Coal Combustion Sources (1999 ~ 2008)") 
             ) + 
             geom_smooth() 
             # scale_color_discrete(name = "Source Type")
@@ -75,7 +76,8 @@ suppressWarnings(ggsave("plot4.png", plot = gr0))
 # detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
 detach("package:ggplot2", unload = TRUE)
-response <- readline("Do you want to perform garbage collection to free up memory? (Yes/No): ")
+response <- readline(paste0("Do you want to perform garbage collection ",
+                            "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
 {
     rm(fileSCC, filePM25, coalPM25, coalSCC)
