@@ -1,0 +1,92 @@
+################################################################################
+## Project: EDA course project 2
+## Script: plot6.R
+## Date: 1/9/2020
+## Author: 
+################################################################################
+.Rfliburl <- "https://raw.githubusercontent.com/robertwcw/Rflib/master"
+source(file.path(.Rfliburl,"getRflib.R"), local = TRUE)
+source(getRflib("is.defined.R"), local = TRUE)
+source(getRflib("myplclust.R"), local = TRUE)
+################################################################################
+## National Emission Inventory data plot for year 1999, 2002, 2005 and 2008.
+## Plot a graph to show the trend for PM2.5 emissions from motor vehicle sources
+## in Baltimore City between 1999 ~ 2008.
+################################################################################
+# Libraries
+# library(maps)
+library(dplyr)
+library(ggplot2)
+# Preparing data for EDA
+# data(county.fips)
+# data(state.fips)
+# county.code <- ifelse(nchar(county.fips[,1]) == 4,
+#                       paste0("0",as.character(county.fips[,1])),
+#                       county.fips[,1])
+datadir <- paste(".", "data", sep = "/")
+if (!dir.exists(datadir)) 
+{
+    dir.create(datadir)
+}
+if (!is.defined(fileSCC) | !is.defined(filePM25)) 
+{
+    if (is.na(list.files(datadir)[1]) | is.na(list.files(datadir)[2])) 
+    {
+        fileurl <- paste0("https://d396qusza40orc.cloudfront.net/",
+                          "exdata%2Fdata%2FNEI_data.zip")
+        filetmp <- tempfile() 
+        download.file(url = fileurl, destfile = filetmp) 
+        unzip(filetmp, overwrite = TRUE, exdir = datadir) 
+        unlink(filetmp) 
+        rm(filetmp, fileurl) 
+    }
+    fileout1 <- paste(datadir, list.files(datadir)[1], sep = "/") 
+    fileout2 <- paste(datadir, list.files(datadir)[2], sep = "/") 
+    fileSCC <- readRDS(fileout1) 
+    filePM25 <- readRDS(fileout2) 
+    unlink(c(fileout1, fileout2)) 
+    rm(fileout1, fileout2) 
+}
+
+mvSCC <- fileSCC %>% 
+                subset(., Data.Category %in% c("Onroad","Nonroad")) %>% 
+                subset(., grepl("[Mm][Oo][Tt][Oo][Rr]|
+                                [Vv][Ee][Hh][Ii][Cc][Ll][Ee]", Short.Name))
+
+baltimorePM25 <- filePM25 %>% filter(fips == "24510" & SCC %in% mvSCC$SCC) 
+losangelesPM25 <- filePM25 %>% filter(fips == "06037" & SCC %in% mvSCC$SCC) 
+dualcountyPM25 <- rbind(baltimorePM25, losangelesPM25)
+dualcountyPM25$type <- as.factor(dualcountyPM25$type)
+# dualcountyPM25$year <- factor(dualcountyPM25$year, 
+#                               labels = c(1999,2002,2005,2008))
+dualcountyPM25$fips <- factor(dualcountyPM25$fips, 
+                              labels = c("Baltimore", "Los Angeles"))
+
+gr0 <- qplot(year, Emissions, data = dualcountyPM25,
+             color = fips,
+             log = "y",
+             xlab = "Year",
+             ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]",
+             main = paste0("Motor Vehicles Emissions in ",
+                           "Baltimore & Los Angeles (1999 ~ 2008)")
+            ) + geom_smooth(method = "lm") +
+                # scale_y_reverse() +
+                # ylim(0,15) +
+                scale_color_discrete(name = "County")
+print(gr0)
+
+
+
+# Houese keeping
+# detach("package:maps", unload = TRUE)
+detach("package:dplyr", unload = TRUE)
+detach("package:ggplot2", unload = TRUE)
+response <- readline(paste0("Do you want to perform garbage collection ",
+                            "to free up memory? (Yes/No): "))
+if (substr(response,1,1) %in% c("Y","y")) 
+{
+    rm(fileSCC, filePM25, baltimorePM25, mvSCC)
+}
+rm(gr0, response, datadir, getRflib, is.defined, myplclust, .Rfliburl)
+gc(full = TRUE)
+
