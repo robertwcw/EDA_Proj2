@@ -76,5 +76,5 @@ if (substr(response,1,1) %in% c("Y","y"))
 {
     rm(fileSCC, filePM25, baltimorePM25)
 }
-rm(response, datadir, pal, getRflib, is.defined, myplclust, .Rfliburl, gr)
+rm(response, datadir, getRflib, is.defined, myplclust, .Rfliburl, gr)
 gc(full = TRUE)
