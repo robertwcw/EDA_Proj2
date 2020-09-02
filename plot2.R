@@ -67,7 +67,7 @@ png(filename = "plot2.png", width = 720, height = 720, units = "px")
 par(ann = FALSE, cex = 1, cex.sub = 0.9) 
 with(baltimorePM25, plot(Emissions ~ jitter(as.integer(year)), 
                          type = "p", 
-                         pch = 4, 
+                         pch = 1, 
                          cex = 0.8,
                          col = pal[unique(type)],
                          log = "y",
@@ -88,7 +88,7 @@ with(baltimorePM25, lines(lowess(x = as.integer(year),
                           )
      )
 
-legend("bottomleft", pch = 4, col = pal[unique(baltimorePM25$type)],
+legend("bottomleft", pch = 1, col = pal[unique(baltimorePM25$type)],
        legend = unique(baltimorePM25$type),
        cex = 0.8
        )

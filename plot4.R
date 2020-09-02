@@ -50,26 +50,26 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
 coalSCC <- fileSCC %>%  subset(., Data.Category %in% c("Point","Nonpoint")) %>% 
                         subset(., grepl("[Cc][Oo][Aa][Ll]",Short.Name)) %>% 
                         subset(., grepl("[Cc][Oo][Mm][Bb]",Short.Name)) 
-coalPM25 <- filePM25 %>% filter(SCC %in% coalSCC$SCC) 
-                        # group_by(Pollutant, type) %>% 
-                        # summarise(Emissions.mean = mean(Emissions)) 
-coalPM25$type <- as.factor(coalPM25$type)
+coalPM25 <- filePM25 %>% filter(SCC %in% coalSCC$SCC) %>%
+                        group_by(Pollutant, type, year, fips) %>%
+                        summarise(Emissions.mean = mean(Emissions))
 coalPM25$Pollutant <- as.factor(coalPM25$Pollutant)
+coalPM25$type <- factor(coalPM25$type, labels = c("Non-Point","Point"))
+coalPM25$year <- factor(coalPM25$year, labels = c(1999,2002,2005,2008))
+coalPM25$fips <- as.factor(coalPM25$fips)
 
 # Plotting graph for PM2.5 pollutant from coal combustion related sources  
 # (overall across the US)
-gr0 <- qplot(year, Emissions, data = coalPM25, 
+gr0 <- qplot(jitter(as.integer(year)), Emissions.mean, data = coalPM25, 
             facets = . ~ type,
-            geom = c("point"), 
             log = "y", 
-            # color = type,
             xlab = "Year", 
             ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]", 
             main = paste0("Coal Combustion Related PM2.5 Emissions ",
                           "for All States (1999 ~ 2008)") 
-            ) + 
-            geom_smooth(method = "lm") 
-            # scale_color_discrete(name = "Source Type")
+            ) + geom_point(shape = 1) +
+            geom_smooth(method = "lm") +
+            scale_x_discrete(limits = c("1999","2002","2005","2008")) 
 suppressWarnings(ggsave("plot4.png", plot = gr0))
 
 # Houese keeping

@@ -65,7 +65,7 @@ gr0 <- qplot(x = jitter(as.integer(year)), y = Emissions, data = baltimorePM25,
              log = "y",
              xlab = "Year",
              ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]"
-             ) + geom_point(shape = 8) + 
+             ) + geom_point(shape = 1) + 
                   geom_rug() +
                   geom_smooth(method = "lm")
 gr0 <- gr0 + labs(title = paste0("PM2.5 Emissions Aggregate in Baltimore City, ",

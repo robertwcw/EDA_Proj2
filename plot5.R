@@ -70,7 +70,7 @@ gr0 <- qplot(x = jitter(as.integer(year)), y = Emissions, data = baltimorePM25,
              ylab = "PM2.5 Emissions [ Mass @ log(tonage) ]", 
              main = paste0("Motor Vehicles Emissions in ",
                            "Baltimore City, Maryland (1999 ~ 2008)")
-             ) + geom_point(shape = 4) +
+             ) + geom_point(shape = 1) +
                  geom_smooth(method = "lm") +
                  scale_color_discrete(name = "Source Type") +
                  scale_x_discrete(limits = c("1999","2002","2005","2008")) 

@@ -64,7 +64,7 @@ png(filename = "plot1.png", width = 720, height = 720, units = "px")
 par(ann = FALSE, cex = 1, cex.sub = 0.8, ylog = TRUE)
 with(emitsPM25, plot(Emissions.mean ~ jitter(as.integer(year)), 
                      type = "p",
-                     pch = 4, 
+                     pch = 1, 
                      cex = 0.8, 
                      col = pal[unique(type)], 
                      log = "y",
@@ -86,7 +86,7 @@ with(emitsPM25, lines(lowess(x = as.integer(year), y = Emissions.mean,
 axis(1, 1:4, labels = c("1999","2002","2005","2008"), tick = TRUE)
 
 legend("bottomleft", legend = unique(emitsPM25$type),
-       pch = 4, 
+       pch = 1, 
        cex = 0.8, 
        col = pal[unique(emitsPM25$type)]
        )

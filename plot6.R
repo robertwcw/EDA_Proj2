@@ -72,7 +72,8 @@ gr0 <- qplot(x = jitter(as.integer(year)), Emissions, data = dualcountyPM25,
              ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]",
              main = paste0("Motor Vehicles Emissions in ",
                            "Baltimore & Los Angeles (1999 ~ 2008)")
-            ) + geom_smooth(method = "lm") +
+            ) + geom_point(shape = 1) +
+                geom_smooth(method = "lm") +
                 scale_color_discrete(name = "County") +
                 scale_x_discrete(limits = c("1999","2002","2005","2008")) 
 ggsave("plot6.png", plot = gr0)
