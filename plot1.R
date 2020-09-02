@@ -15,15 +15,15 @@ source(getRflib("myplclust.R"), local = TRUE)
 ## road, non-road). Please refer to EPA website for pollutant source definition.
 ################################################################################
 # Libraries
-# library(maps)
+library(maps)
 library(dplyr)
 
 # Preparing data for EDA
-# data(county.fips)
+data(county.fips)
 # data(state.fips)
-# county.code <- ifelse(nchar(county.fips[,1]) == 4,
-#                       paste0("0",as.character(county.fips[,1])),
-#                       county.fips[,1])
+county.code <- ifelse(nchar(county.fips[,1]) == 4,
+                      paste0("0",as.character(county.fips[,1])),
+                      county.fips[,1])
 datadir <- paste(".", "data", sep = "/")
 if (!dir.exists(datadir)) 
     {
@@ -33,7 +33,8 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
 {
       if (is.na(list.files(datadir)[1]) | is.na(list.files(datadir)[2])) 
       {
-          fileurl <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+          fileurl <- paste0("https://d396qusza40orc.cloudfront.net/",
+                            "exdata%2Fdata%2FNEI_data.zip")
           filetmp <- tempfile() 
           download.file(url = fileurl, destfile = filetmp) 
           unzip(filetmp, overwrite = TRUE, exdir = datadir) 
@@ -47,52 +48,65 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
-emissionPM25 <- filePM25 %>% 
-                # group_by(Pollutant, type, year) %>%
-                group_by(Pollutant, year) %>%
-                summarise(Emission.total = sum(Emissions)) 
+filePM25 <- filePM25 %>% filter(fips %in% county.code) %>% 
+                          group_by(Pollutant, type, year, fips) %>%
+                          summarise(Emissions.mean = mean(Emissions))
+filePM25$Pollutant <- factor(filePM25$Pollutant)
+filePM25$type <- factor(filePM25$type)
+filePM25$year <- factor(filePM25$year, labels = c("1999","2002","2005","2008"))
+filePM25$fips <- factor(filePM25$fips, exclude = c("   NA","00000"))
 
 # Preparing color palette based on RGB color space
 pal <- c(rgb(0,0,1), rgb(0,1,0), rgb(1,0,0), rgb(1,0,1))
 
 # Plotting graph
 png(filename = "plot1.png", width = 600, height = 600, units = "px")
-par(ann = FALSE, cex = 1, cex.sub = 1.1, ylog = TRUE)
-with(emissionPM25, 
-     plot(year, log10(Emission.total), type = "o", 
-          # pch = 19, col = pal[as.factor(type)], log = "y"
-          pch = 19, col = pal[3]
-          )
+
+par(ann = FALSE, cex = 1, cex.sub = 0.8, ylog = TRUE)
+with(filePM25, plot(Emissions.mean ~ jitter(as.integer(year)), 
+                    type = "p",
+                    pch = 4, 
+                    cex = 0.8, 
+                    col = pal[unique(type)], 
+                    log = "y",
+                    xaxt = "none"
+                    # yaxt = "none"
+                    )
      )
-# legend("topright", pch = 19, col = pal[as.factor(unique(emissionPM25$type))], 
-#        legend = as.factor(unique(emissionPM25$type))
-#       )
-# with(subset(emissionPM25, type == unique(type)[1]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[1])
-#     )
-# with(subset(emissionPM25, type == unique(type)[2]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[2])
-#     )
-# with(subset(emissionPM25, type == unique(type)[3]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[3])
-#     )
-# with(subset(emissionPM25, type == unique(type)[4]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[4])
-#     )
-title(main = "Total PM2.5 Emissions of All States (1999 ~ 2008)", 
+
+# abline(lm(Emissions.mean ~ year, data = filePM25),
+#        lwd = 3, lty = 1,col = "yellow3")
+with(filePM25, lines(lowess(x = as.integer(year), y = Emissions.mean, f = 2/3, iter = 10),
+                    lwd = 3, lty = 1, col = "black"
+                    )
+     )
+
+axis(1, 1:4, labels = c("1999","2002","2005","2008"), tick = TRUE)
+
+legend("bottomleft", legend = unique(filePM25$type),
+       pch = 4, 
+       cex = 0.8, 
+       col = pal[unique(filePM25$type)]
+       )
+
+title(main = "PM2.5 Emissions of All States (1999 ~ 2008)", 
       sub = "National Emissions Inventory Data (publish every 3 years)", 
-      xlab = "YEAR", 
-      ylab = "Mass of PM2.5 Emissions [ @log10(tonnage) ]" 
+      xlab = "Year", 
+      ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]" 
       )
+
 dev.off()
 
+
 # Houese keeping
-# detach("package:maps", unload = TRUE)
+detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
-response <- readline("Do you want to perform garbage collection to free up memory? (Yes/No): ")
+response <- readline(paste0("Do you want to perform garbage collection ",
+                            "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
     {
       rm(fileSCC, filePM25, emissionPM25)
     }
-rm(response, datadir, pal, getRflib, is.defined, myplclust, .Rfliburl)
+rm(county.fips, getRflib, is.defined, myplclust, .Rfliburl)
+rm(county.code, datadir, response)
 gc(full = TRUE)
