@@ -56,13 +56,16 @@ mvSCC <- fileSCC %>%
 baltimorePM25 <- filePM25 %>% filter(fips == "24510" & SCC %in% mvSCC$SCC) 
 losangelesPM25 <- filePM25 %>% filter(fips == "06037" & SCC %in% mvSCC$SCC) 
 dualcountyPM25 <- rbind(baltimorePM25, losangelesPM25)
-dualcountyPM25$type <- as.factor(dualcountyPM25$type)
-# dualcountyPM25$year <- factor(dualcountyPM25$year, 
-#                               labels = c(1999,2002,2005,2008))
-dualcountyPM25$fips <- factor(dualcountyPM25$fips, 
-                              labels = c("Baltimore", "Los Angeles"))
+dualcountyPM25 <- dualcountyPM25 %>% group_by(Pollutant, type, year, fips)
 
-gr0 <- qplot(year, Emissions, data = dualcountyPM25,
+dualcountyPM25$type <- factor(dualcountyPM25$type,
+                              labels = c("Non-Road", "On-Road"))
+dualcountyPM25$year <- factor(dualcountyPM25$year,
+                              labels = c(1999,2002,2005,2008))
+dualcountyPM25$fips <- factor(dualcountyPM25$fips, 
+                              labels = c("Los Angeles", "Baltimore"))
+
+gr0 <- qplot(x = jitter(as.integer(year)), Emissions, data = dualcountyPM25,
              color = fips,
              log = "y",
              xlab = "Year",
@@ -70,23 +73,21 @@ gr0 <- qplot(year, Emissions, data = dualcountyPM25,
              main = paste0("Motor Vehicles Emissions in ",
                            "Baltimore & Los Angeles (1999 ~ 2008)")
             ) + geom_smooth(method = "lm") +
-                # scale_y_reverse() +
-                # ylim(0,15) +
-                scale_color_discrete(name = "County")
-print(gr0)
-
-
+                scale_color_discrete(name = "County") +
+                scale_x_discrete(limits = c("1999","2002","2005","2008")) 
+ggsave("plot6.png", plot = gr0)
 
 # Houese keeping
 # detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
 detach("package:ggplot2", unload = TRUE)
-response <- readline(paste0("Do you want to perform garbage collection ",
+response <- readline(paste0("Do you want to delete working data sets ",
                             "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
 {
-    rm(fileSCC, filePM25, baltimorePM25, mvSCC)
+    rm(fileSCC, filePM25)
 }
 rm(gr0, response, datadir, getRflib, is.defined, myplclust, .Rfliburl)
+rm(baltimorePM25, losangelesPM25, dualcountyPM25, mvSCC)
 gc(full = TRUE)
 

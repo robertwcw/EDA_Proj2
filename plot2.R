@@ -11,18 +11,18 @@ source(getRflib("myplclust.R"), local = TRUE)
 ################################################################################
 ## National Emission Inventory data plot for year 1999, 2002, 2005 and 2008.
 ## Plot a graph to show the trend for total pollutant PM2.5 emissions in the
-## Baltimore City, Maryland (fips 24510) between 1999 ~ 2008 for all pollutant 
-## sources (point, non-point, road, non-road).
+## Baltimore City, Maryland (fips 24510) between 1999 ~ 2008 for all type of  
+## pollutant sources (point, non-point, road, non-road).
 ################################################################################
 # Libraries
-# library(maps)
+library(maps)
 library(dplyr)
 # Preparing data for EDA
-# data(county.fips)
+data(county.fips)
 # data(state.fips)
-# county.code <- ifelse(nchar(county.fips[,1]) == 4,
-#                       paste0("0",as.character(county.fips[,1])),
-#                       county.fips[,1])
+county.code <- ifelse(nchar(county.fips[,1]) == 4,
+                      paste0("0",as.character(county.fips[,1])),
+                      county.fips[,1])
 datadir <- paste(".", "data", sep = "/")
 if (!dir.exists(datadir)) 
 {
@@ -32,7 +32,8 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
 {
     if (is.na(list.files(datadir)[1]) | is.na(list.files(datadir)[2])) 
     {
-        fileurl <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+        fileurl <- paste0("https://d396qusza40orc.cloudfront.net/",
+                          "exdata%2Fdata%2FNEI_data.zip")
         filetmp <- tempfile() 
         download.file(url = fileurl, destfile = filetmp) 
         unzip(filetmp, overwrite = TRUE, exdir = datadir) 
@@ -46,53 +47,69 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
-baltimorePM25 <- filePM25 %>% 
-                    filter(fips == "24510") %>% 
-                    # group_by(Pollutant, type, year) %>% 
-                    group_by(Pollutant, year) %>% 
-                    summarise(Emission.total = sum(Emissions)) 
+
+baltimorePM25 <- filePM25 %>% filter(fips == "24510") %>% 
+                            group_by(Pollutant, type, year) 
+
+baltimorePM25$Pollutant <- factor(baltimorePM25$Pollutant)
+baltimorePM25$year <- factor(baltimorePM25$year, 
+                             labels = c("1999","2002","2005","2008"))
+baltimorePM25$fips <- factor(baltimorePM25$fips)
+baltimorePM25$type <- factor(baltimorePM25$type,
+                            labels = c("NON-ROAD","NONPOINT","ON-ROAD","POINT"))
 
 # Preparing color palette based on RGB color space
 pal <- c(rgb(0,0,1), rgb(0,1,0), rgb(1,0,0), rgb(1,0,1))
 
-# Plotting graph
-png(filename = "plot2.png", width = 600, height = 600, units = "px")
-par(ann = FALSE, cex = 1, cex.sub = 1.1, ylog = TRUE) 
-with(baltimorePM25, 
-     plot(year, log10(Emission.total), type = "o", 
-          # pch = 19, col = pal[as.factor(type)]), log = "y" 
-          pch = 19, col = pal[3]
-         ) 
-    ) 
-# legend("topright", pch = 19, col = pal[as.factor(unique(baltimorePM25$type))], 
-#        legend = as.factor(unique(baltimorePM25$type))
-#     )
-# with(subset(baltimorePM25, type == unique(type)[1]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[1])
-#     )
-# with(subset(baltimorePM25, type == unique(type)[2]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[2])
-#     )
-# with(subset(baltimorePM25, type == unique(type)[3]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[3])
-#     )
-# with(subset(baltimorePM25, type == unique(type)[4]), 
-#      lines(year, log10(Emission.total), lwd = 2, lty = 3, col = pal[4])
-#     )
-title(main = "Total PM2.5 Emissions of Baltimore City, Maryland (1999 ~ 2008)", 
-      sub = "National Emissions Inventory Data (publish every 3 years)", 
-      xlab = "YEAR", 
-      ylab = "Mass of PM2.5 Emissions [ @log10(tonnage) ]" 
+# Plotting graph for total emissions in Baltimore, Maryland
+png(filename = "plot2.png", width = 720, height = 720, units = "px")
+
+par(ann = FALSE, cex = 1, cex.sub = 0.9) 
+with(baltimorePM25, plot(Emissions ~ jitter(as.integer(year)), 
+                         type = "p", 
+                         pch = 4, 
+                         cex = 0.8,
+                         col = pal[unique(type)],
+                         log = "y",
+                         xaxt = "none"
+                         )
     )
+
+axis(1, 1:4, labels = c("1999","2002","2005","2008"), tick = TRUE)
+
+# abline(lm(Emissions ~ year, data = baltimorePM25),
+#        lwd = 3, lty = 1,col = "yellow3")
+with(baltimorePM25, lines(lowess(x = as.integer(year),
+                                 y = Emissions,
+                                 f = 2/3,
+                                 iter = 10
+                                 ),
+                          lwd = 3, lty = 1, col = "black"
+                          )
+     )
+
+legend("bottomleft", pch = 4, col = pal[unique(baltimorePM25$type)],
+       legend = unique(baltimorePM25$type),
+       cex = 0.8
+       )
+
+title(main = paste0("PM2.5 Emissions Aggregate of Baltimore City, ",
+                    "Maryland (1999 ~ 2008)"), 
+      sub = "National Emissions Inventory Data (publish every 3 years)", 
+      xlab = "Year", 
+      ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]"
+      )
+
 dev.off()
 
 # Houese keeping
-# detach("package:maps", unload = TRUE)
+detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
 response <- readline("Do you want to perform garbage collection to free up memory? (Yes/No): ")
 if (substr(response,1,1) %in% c("Y","y")) 
 {
-    rm(fileSCC, filePM25, baltimorePM25)
+    rm(fileSCC, filePM25)
 }
-rm(response, datadir, pal, getRflib, is.defined, myplclust, .Rfliburl)
+rm(response, datadir, pal, baltimorePM25, county.code)
+rm(getRflib, is.defined, myplclust, .Rfliburl, county.fips)
 gc(full = TRUE)

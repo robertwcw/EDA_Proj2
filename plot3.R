@@ -15,15 +15,15 @@ source(getRflib("myplclust.R"), local = TRUE)
 ## (fips 24510) between 1999 ~ 2008.
 ################################################################################
 # Libraries
-# library(maps)
+library(maps)
 library(dplyr)
 library(ggplot2)
 # Preparing data for EDA
-# data(county.fips)
+data(county.fips)
 # data(state.fips)
-# county.code <- ifelse(nchar(county.fips[,1]) == 4,
-#                       paste0("0",as.character(county.fips[,1])),
-#                       county.fips[,1])
+county.code <- ifelse(nchar(county.fips[,1]) == 4,
+                      paste0("0",as.character(county.fips[,1])),
+                      county.fips[,1])
 datadir <- paste(".", "data", sep = "/")
 if (!dir.exists(datadir)) 
 {
@@ -33,7 +33,8 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
 {
     if (is.na(list.files(datadir)[1]) | is.na(list.files(datadir)[2])) 
     {
-        fileurl <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+        fileurl <- paste0("https://d396qusza40orc.cloudfront.net/",
+                          "exdata%2Fdata%2FNEI_data.zip")
         filetmp <- tempfile() 
         download.file(url = fileurl, destfile = filetmp) 
         unzip(filetmp, overwrite = TRUE, exdir = datadir) 
@@ -47,34 +48,47 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
-baltimorePM25 <- filePM25 %>% 
-      filter(fips == "24510") %>% 
-      group_by(Pollutant, type, year) %>%
-      summarise(Emission.total = sum(Emissions)) 
+
+baltimorePM25 <- filePM25 %>% filter(fips == "24510") %>%
+                            group_by(Pollutant, type, year)
+
+baltimorePM25$Pollutant <- factor(baltimorePM25$Pollutant)
+baltimorePM25$type <- factor(baltimorePM25$type,
+                             labels = c("Non-Road","Non-Point","On-Road","Point"))
+baltimorePM25$year <- factor(baltimorePM25$year, 
+                             labels = c(1999,2002,2005,2008))
+baltimorePM25$fips <- factor(baltimorePM25$fips)
 
 # Plotting graph 
-png(filename = "plot3.png", width = 600, height = 600, units = "px") 
-gr <- qplot(x = year, y = log10(Emission.total), data = baltimorePM25,  
-            color = type, 
-            geom = c("point", "line"), 
-            xlab = "Year",
-            ylab = "PM2.5 Emissions [ Mass @ log10(tonnage) ]"
-            )
-gr <- gr + labs(title = "PM2.5 Emissions of Baltimore City, Maryland (1999 ~ 2008)", 
+gr0 <- qplot(x = jitter(as.integer(year)), y = Emissions, data = baltimorePM25,
+             color = type,
+             log = "y",
+             xlab = "Year",
+             ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]"
+             ) + geom_point(shape = 8) + 
+                  geom_rug() +
+                  geom_smooth(method = "lm")
+gr0 <- gr0 + labs(title = paste0("PM2.5 Emissions Aggregate in Baltimore City, ",
+                               "Maryland (1999 ~ 2008)"), 
                 subtitle = "By Type of pollutant source", 
-                caption = "Data: National Emissions Inventory (publish every 3-year)" 
+                caption = paste0("Data: National Emissions Inventory ",
+                                 "(publish every 3-year)")
                 )
-print(gr)
-dev.off()
+
+gr0 <- gr0 + scale_color_discrete(name = "Source Type")
+
+suppressWarnings(ggsave("plot3.png", plot = gr0))
 
 # Houese keeping
-# detach("package:maps", unload = TRUE)
+detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
 detach("package:ggplot2", unload = TRUE)
-response <- readline("Do you want to perform garbage collection to free up memory? (Yes/No): ")
+response <- readline(paste0("Do you want to perform garbage collection ",
+                            "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
 {
-    rm(fileSCC, filePM25, baltimorePM25)
+    rm(fileSCC, filePM25)
 }
-rm(response, datadir, getRflib, is.defined, myplclust, .Rfliburl, gr)
+rm(getRflib, is.defined, myplclust, .Rfliburl, county.fips, baltimorePM25)
+rm(response, datadir, gr0, county.code)
 gc(full = TRUE)

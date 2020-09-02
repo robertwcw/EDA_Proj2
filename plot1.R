@@ -17,7 +17,6 @@ source(getRflib("myplclust.R"), local = TRUE)
 # Libraries
 library(maps)
 library(dplyr)
-
 # Preparing data for EDA
 data(county.fips)
 # data(state.fips)
@@ -48,48 +47,51 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
-filePM25 <- filePM25 %>% filter(fips %in% county.code) %>% 
+emitsPM25 <- filePM25 %>% filter(fips %in% county.code) %>% 
                           group_by(Pollutant, type, year, fips) %>%
                           summarise(Emissions.mean = mean(Emissions))
-filePM25$Pollutant <- factor(filePM25$Pollutant)
-filePM25$type <- factor(filePM25$type)
-filePM25$year <- factor(filePM25$year, labels = c("1999","2002","2005","2008"))
-filePM25$fips <- factor(filePM25$fips, exclude = c("   NA","00000"))
+emitsPM25$Pollutant <- factor(emitsPM25$Pollutant)
+emitsPM25$type <- factor(emitsPM25$type)
+emitsPM25$year <- factor(emitsPM25$year, labels = c("1999","2002","2005","2008"))
+emitsPM25$fips <- factor(emitsPM25$fips, exclude = c("   NA","00000"))
 
 # Preparing color palette based on RGB color space
 pal <- c(rgb(0,0,1), rgb(0,1,0), rgb(1,0,0), rgb(1,0,1))
 
 # Plotting graph
-png(filename = "plot1.png", width = 600, height = 600, units = "px")
+png(filename = "plot1.png", width = 720, height = 720, units = "px")
 
 par(ann = FALSE, cex = 1, cex.sub = 0.8, ylog = TRUE)
-with(filePM25, plot(Emissions.mean ~ jitter(as.integer(year)), 
-                    type = "p",
-                    pch = 4, 
-                    cex = 0.8, 
-                    col = pal[unique(type)], 
-                    log = "y",
-                    xaxt = "none"
-                    # yaxt = "none"
-                    )
+with(emitsPM25, plot(Emissions.mean ~ jitter(as.integer(year)), 
+                     type = "p",
+                     pch = 4, 
+                     cex = 0.8, 
+                     col = pal[unique(type)], 
+                     log = "y",
+                     xaxt = "none"
+                     # yaxt = "none"
+                     )
      )
 
-# abline(lm(Emissions.mean ~ year, data = filePM25),
+# abline(lm(Emissions.mean ~ year, data = emitsPM25),
 #        lwd = 3, lty = 1,col = "yellow3")
-with(filePM25, lines(lowess(x = as.integer(year), y = Emissions.mean, f = 2/3, iter = 10),
-                    lwd = 3, lty = 1, col = "black"
-                    )
+with(emitsPM25, lines(lowess(x = as.integer(year), y = Emissions.mean, 
+                             f = 2/3, 
+                             iter = 10
+                             ),
+                      lwd = 3, lty = 1, col = "black"
+                      )
      )
 
 axis(1, 1:4, labels = c("1999","2002","2005","2008"), tick = TRUE)
 
-legend("bottomleft", legend = unique(filePM25$type),
+legend("bottomleft", legend = unique(emitsPM25$type),
        pch = 4, 
        cex = 0.8, 
-       col = pal[unique(filePM25$type)]
+       col = pal[unique(emitsPM25$type)]
        )
 
-title(main = "PM2.5 Emissions of All States (1999 ~ 2008)", 
+title(main = "PM2.5 Emissions Aggregate of All States (1999 ~ 2008)", 
       sub = "National Emissions Inventory Data (publish every 3 years)", 
       xlab = "Year", 
       ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]" 
@@ -105,8 +107,8 @@ response <- readline(paste0("Do you want to perform garbage collection ",
                             "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
     {
-      rm(fileSCC, filePM25, emissionPM25)
+      rm(fileSCC, filePM25)
     }
-rm(county.fips, getRflib, is.defined, myplclust, .Rfliburl)
-rm(county.code, datadir, response)
+rm(emitsPM25, county.fips, getRflib, is.defined, myplclust, .Rfliburl)
+rm(county.code, datadir, response, pal)
 gc(full = TRUE)

@@ -47,28 +47,28 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
-
 coalSCC <- fileSCC %>%  subset(., Data.Category %in% c("Point","Nonpoint")) %>% 
                         subset(., grepl("[Cc][Oo][Aa][Ll]",Short.Name)) %>% 
                         subset(., grepl("[Cc][Oo][Mm][Bb]",Short.Name)) 
-
 coalPM25 <- filePM25 %>% filter(SCC %in% coalSCC$SCC) 
                         # group_by(Pollutant, type) %>% 
                         # summarise(Emissions.mean = mean(Emissions)) 
 coalPM25$type <- as.factor(coalPM25$type)
+coalPM25$Pollutant <- as.factor(coalPM25$Pollutant)
 
-# Plotting graph for NonPoint source PM2.5 pollutant (overall across the US)
-gr0 <- qplot(jitter(year), jitter(Emissions), data = coalPM25, 
+# Plotting graph for PM2.5 pollutant from coal combustion related sources  
+# (overall across the US)
+gr0 <- qplot(year, Emissions, data = coalPM25, 
             facets = . ~ type,
             geom = c("point"), 
             log = "y", 
-            # color = type, 
+            # color = type,
             xlab = "Year", 
             ylab = "PM2.5 Emissions [ Mass @ log(tonnage) ]", 
-            main = paste0("Total PM2.5 Emissions from ",
-                          "Coal Combustion Sources (1999 ~ 2008)") 
+            main = paste0("Coal Combustion Related PM2.5 Emissions ",
+                          "for All States (1999 ~ 2008)") 
             ) + 
-            geom_smooth() 
+            geom_smooth(method = "lm") 
             # scale_color_discrete(name = "Source Type")
 suppressWarnings(ggsave("plot4.png", plot = gr0))
 
@@ -80,7 +80,8 @@ response <- readline(paste0("Do you want to perform garbage collection ",
                             "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
 {
-    rm(fileSCC, filePM25, coalPM25, coalSCC)
+    rm(fileSCC, filePM25)
 }
-rm(gr0, response, datadir, getRflib, is.defined, myplclust, .Rfliburl)
+rm(getRflib, is.defined, myplclust, .Rfliburl)
+rm(coalPM25, coalSCC, gr0, response, datadir)
 gc(full = TRUE)

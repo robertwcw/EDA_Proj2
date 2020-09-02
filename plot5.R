@@ -48,20 +48,32 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     rm(fileout1, fileout2) 
 }
 
-mvSCC <- fileSCC %>% subset(., Data.Category %in% c("Onroad","Nonroad")) %>% 
-                    subset(., grepl("[Mm][Oo][Tt][Oo][Rr]|
-                                     [Vv][Ee][Hh][Ii][Cc][Ll][Ee]", Short.Name))
+mvSCC <- fileSCC %>% 
+    subset(., Data.Category %in% c("Onroad","Nonroad")) %>% 
+    subset(., grepl("[Mm][Oo][Tt][Oo][Rr]|[Vv][Ee][Hh][Ii][Cc][Ll][Ee]", 
+                    Short.Name))
 
-baltimorePM25 <- filePM25 %>% filter(fips == "24510" & SCC %in% mvSCC$SCC) 
+baltimorePM25 <- filePM25 %>% 
+    filter(fips == "24510" & SCC %in% mvSCC$SCC) %>%
+    group_by(Pollutant, type, year, fips)
+
+baltimorePM25$Pollutant <- as.factor(baltimorePM25$Pollutant)
 baltimorePM25$type <- as.factor(baltimorePM25$type)
+baltimorePM25$year <- as.factor(baltimorePM25$year)
+baltimorePM25$fips <- as.factor(baltimorePM25$fips)
 
-plotting 
-gr0 <- qplot(x = jitter(year), y = jitter(Emissions), data = baltimorePM25,
+# plotting graph showing Motor vehicles pm2.5 emissions in Baltimore city
+gr0 <- qplot(x = jitter(as.integer(year)), y = Emissions, data = baltimorePM25,
+             log = "y",
+             color = type,
              xlab = "Year", 
-             ylab = "PM2.5 Emissions", 
-             main = paste0("PM2.5 Emissions from Motor Vehicles ",
-                           "in Baltimore City, Maryland (1999 ~ 2008)") 
-             ) + geom_smooth() 
+             ylab = "PM2.5 Emissions [ Mass @ log(tonage) ]", 
+             main = paste0("Motor Vehicles Emissions in ",
+                           "Baltimore City, Maryland (1999 ~ 2008)")
+             ) + geom_point(shape = 4) +
+                 geom_smooth(method = "lm") +
+                 scale_color_discrete(name = "Source Type") +
+                 scale_x_discrete(limits = c("1999","2002","2005","2008")) 
 ggsave("plot5.png", plot = gr0)
 
 # Houese keeping
@@ -72,9 +84,10 @@ response <- readline(paste0("Do you want to perform garbage collection ",
                             "to free up memory? (Yes/No): "))
 if (substr(response,1,1) %in% c("Y","y")) 
 {
-    rm(fileSCC, filePM25, baltimorePM25, mvSCC)
+    rm(fileSCC, filePM25)
 }
-rm(gr0, response, datadir, getRflib, is.defined, myplclust, .Rfliburl)
+rm(getRflib, is.defined, myplclust, .Rfliburl, mvSCC, baltimorePM25)
+rm(gr0, response, datadir)
 gc(full = TRUE)
 
 
