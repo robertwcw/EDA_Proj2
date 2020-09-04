@@ -42,8 +42,8 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     }
     fileout1 <- paste(datadir, list.files(datadir)[1], sep = "/") 
     fileout2 <- paste(datadir, list.files(datadir)[2], sep = "/") 
-    fileSCC <- readRDS(fileout1) 
-    filePM25 <- readRDS(fileout2) 
+    fileSCC <- as.data.table(readRDS(fileout1)) 
+    filePM25 <- as.data.table(readRDS(fileout2)) 
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
@@ -76,12 +76,12 @@ suppressWarnings(ggsave("plot4.png", plot = gr0))
 # detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
 detach("package:ggplot2", unload = TRUE)
-response <- readline(paste0("Do you want to perform garbage collection ",
-                            "to free up memory? (Yes/No): "))
-if (substr(response,1,1) %in% c("Y","y")) 
-{
+response <- readline(paste0("Do you want to retain the NEI data sets ",
+                            "for subsequent use? (Yes/No): "))
+if (!substr(response,1,1) %in% c("Y","y")) 
+    {
     rm(fileSCC, filePM25)
-}
+    }
 rm(getRflib, is.defined, myplclust, .Rfliburl)
 rm(coalPM25, coalSCC, gr0, response, datadir)
 gc(full = TRUE)

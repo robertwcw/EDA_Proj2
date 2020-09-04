@@ -11,7 +11,7 @@ source(getRflib("myplclust.R"), local = TRUE)
 ################################################################################
 ## National Emission Inventory data plot for year 1999, 2002, 2005 and 2008.
 ## Plot a graph to show the trend for PM2.5 emissions from motor vehicle sources
-## in Baltimore City between 1999 ~ 2008.
+## in Baltimore & Los Angeles between 1999 ~ 2008.
 ################################################################################
 # Libraries
 # library(maps)
@@ -42,8 +42,8 @@ if (!is.defined(fileSCC) | !is.defined(filePM25))
     }
     fileout1 <- paste(datadir, list.files(datadir)[1], sep = "/") 
     fileout2 <- paste(datadir, list.files(datadir)[2], sep = "/") 
-    fileSCC <- readRDS(fileout1) 
-    filePM25 <- readRDS(fileout2) 
+    fileSCC <- as.data.table(readRDS(fileout1)) 
+    filePM25 <- as.data.table(readRDS(fileout2)) 
     unlink(c(fileout1, fileout2)) 
     rm(fileout1, fileout2) 
 }
@@ -82,12 +82,12 @@ ggsave("plot6.png", plot = gr0)
 # detach("package:maps", unload = TRUE)
 detach("package:dplyr", unload = TRUE)
 detach("package:ggplot2", unload = TRUE)
-response <- readline(paste0("Do you want to delete working data sets ",
-                            "to free up memory? (Yes/No): "))
-if (substr(response,1,1) %in% c("Y","y")) 
-{
+response <- readline(paste0("Do you want to retain the NEI data sets ",
+                            "for subsequent use? (Yes/No): "))
+if (!substr(response,1,1) %in% c("Y","y")) 
+    {
     rm(fileSCC, filePM25)
-}
+    }
 rm(gr0, response, datadir, getRflib, is.defined, myplclust, .Rfliburl)
 rm(baltimorePM25, losangelesPM25, dualcountyPM25, mvSCC)
 gc(full = TRUE)
